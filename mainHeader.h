@@ -2,6 +2,10 @@
 #include <windows.h>
 #include <iostream>
 
+#define CAPTURE_TIME 10000
+#define FS_DRIVER_NAME L"MiniFilter"
+#define UM_MSG "Aloooooooooo\n"
+
 typedef struct ProcInfo PROC_INFO, * PPROC_INFO;
 
 typedef struct FileInfo FILE_INFO, * PFILE_INFO;
@@ -96,3 +100,7 @@ BOOLEAN LoadDriver(_Out_ SC_HANDLE* hService, _Out_ SC_HANDLE* hSCManager, wchar
  *
  */
 void UnloadDriver(_In_ SC_HANDLE* hService, _In_ SC_HANDLE* hSCManager);
+
+VOID CALLBACK StopCapture();
+	return;
+}
