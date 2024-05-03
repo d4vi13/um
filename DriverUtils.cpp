@@ -59,3 +59,23 @@ void UnloadDriver(_In_ SC_HANDLE* hService, _In_ SC_HANDLE* hSCManager){
 	CloseServiceHandle(*hService);
 	CloseServiceHandle(*hSCManager);
 }
+
+
+/**
+ * GetDriverHandle - Open a handle to a driver.
+ * @DriverName: Name of the driver to open a handle to.
+ *
+ * This function opens a handle to a driver with the specified name.
+ *
+ * Returns: A handle to the driver if successful, otherwise an error code.
+ */
+HANDLE GetDriverHandle(wchar_* DriverName) {
+    // Construct the full driver name with the appropriate prefix
+    std::wstring FsDriverName("\\\\.\\");
+    FsDriverName += DriverName;
+
+    // Open a handle to the driver file
+    return CreateFile(FsDriverName, GENERIC_WRITE | GENERIC_READ,
+                      0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+}
+

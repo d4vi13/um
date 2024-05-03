@@ -1,37 +1,50 @@
 #include "mainHeader.h"
 
+// Global variable to control capture state
 BOOLEAN captureOn = TRUE;
 
 int main() {
-	SC_HANDLE hService, hSCManager;
-	HANDLE timerHandle, DriverHandle;
-	INFO Info;
-	wchar_t DriverName[] = DRIVER_NAME;
+    // Handle declarations
+    SC_HANDLE hService, hSCManager;
+    HANDLE timerHandle, DriverHandle;
+    // Structure for information
+    INFO Info;
+    // Driver name
+    wchar_t DriverName[] = DRIVER_NAME;
 
-	LoadDriver(&hService, &hSCManager,DriverName);
+    // File pointer for logging
+    FILE *logFile = fopen("Log.txt", "w");
 
-	//Get Driver Hanlde
-    DriverHandle = GetDriverHandle(DrievrName);
+    // Load the driver
+    LoadDriver(&hService, &hSCManager, DriverName);
 
-	//cria temporizador
-	CreateTimerQueueTimer(&timerHandle, NULL, (WAITORTIMERCALLBACK)StopCapture
-                        , NULL, CAPTURE_TIME, 0, WT_EXECUTEDEFAULT);
+    // Get a handle to the driver
+    DriverHandle = GetDriverHandle(DriverName);
 
-	//loop que retira da lista
-	while (captureOn) {
-		DeviceIoControl(DriverHandle,IOCTL_FILE_LOG,
-                        UM_MSG,sizeof(UM_MSG),&Info,
-                        sizeof(Info),&BytesReturned,
+    // Create a timer to stop capture
+    CreateTimerQueueTimer(&timerHandle, NULL, (WAITORTIMERCALLBACK)StopCapture,
+                          NULL, CAPTURE_TIME, 0, WT_EXECUTEDEFAULT);
+
+    // Main loop for capturing
+    while (captureOn) {
+        // Send IOCTL to driver to capture information
+        DeviceIoControl(DriverHandle, IOCTL_FILE_LOG,
+                        UM_MSG, sizeof(UM_MSG), &Info,
+                        sizeof(Info), &BytesReturned,
                         NULL);
+
+        // Log captured information if any
         if (BytesReturned > 0)
-            printf("Hello baack from kernel mode\n");
-	}
+            LogInfo(Info, logFile, IOCTL_FILE_LOG);
+    }
 
-	//change third parameter to a function that 
-	(void)DeleteTimerQueueTimer(NULL, &timerHandle, NULL);
+    // Delete the timer
+    (void)DeleteTimerQueueTimer(NULL, &timerHandle, NULL);
 
-	UnloadDriver(&hService, &hSCManager);
+    // Unload the driver
+    UnloadDriver(&hService, &hSCManager);
 
+    // Close the driver handle
     CloseHandle(DriverHandle);
 
     return 0;

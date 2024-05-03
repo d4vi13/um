@@ -102,5 +102,5 @@ BOOLEAN LoadDriver(_Out_ SC_HANDLE* hService, _Out_ SC_HANDLE* hSCManager, wchar
 void UnloadDriver(_In_ SC_HANDLE* hService, _In_ SC_HANDLE* hSCManager);
 
 VOID CALLBACK StopCapture();
-	return;
-}
+
+void LogInfo(INFO Info, FILE *logFile, DWORD IOCTL_CODE);
