@@ -1,5 +1,6 @@
 #include "mainHeader.h"
 
+
 /*
  * LogMjFunc - Log major function information
  * @MjFunc: MJFUNC struct containing major function details
@@ -7,8 +8,9 @@
  *
  * Writes the name of the major function to the log file.
  */
-void LogMjFunc(MJFUNC MjFunc, FILE *logFile){
-    fprintf(logFile, "%s\n",MjFunc.Name); 
+void LogMjFunc(MJFUNC MjFunc, FILE* logFile) {
+    fprintf(logFile, "\"mjFunc\": ");
+    fprintf(logFile, "\"%lu\",\n", MjFunc.Code);
 
     return;
 }
@@ -20,12 +22,12 @@ void LogMjFunc(MJFUNC MjFunc, FILE *logFile){
  *
  * Writes time information to the log file in the format: "Hour:Minute:Second:Milliseconds".
  */
-void LogTime(TIME_FIELDS TimeFields, FILE *logFile){
-    fprintf(logFile,"%s:",TimeFields.Hour);
-    fprintf(logFile,"%s:",TimeFields.Minute);
-    fprintf(logFile,"%s:",TimeFields.Second);
-    fprintf(logFile,"%s\n",TimeFields.Milliseconds);
+void LogTime(TIME_FIELDS TimeFields, FILE* logFile) {
+    fprintf(logFile, "\"date\": ");
+    fprintf(logFile, "\"%d/%d/%d\",\n", TimeFields.Day, TimeFields.Month, TimeFields.Year);
 
+    fprintf(logFile, "\"time\": ");
+    fprintf(logFile, "\"%d:%d:%d\",\n", TimeFields.Hour, TimeFields.Second, TimeFields.Milliseconds);
     return;
 }
 
@@ -36,10 +38,15 @@ void LogTime(TIME_FIELDS TimeFields, FILE *logFile){
  *
  * Writes process information to the log file including PID, SID, and elevation status.
  */
-void LogProcInfo(PROC_INFO ProcInfo, FILE *logFile){
-    fprintf(logFile, "PID: %lu\n",ProcInfo.PID);
-    fprintf(logFile, "SID:%lu\n",ProcInfo.SID);
-    fprintf(logFile, "isElevated: %ld\n",ProcInfo.IsElevated); 
+void LogProcInfo(PROC_INFO ProcInfo, FILE* logFile) {
+    fprintf(logFile, "\"pid\": ");
+    fprintf(logFile, "\"%lu\",\n", ProcInfo.PID);
+    
+    fprintf(logFile, "\"sid\": ");
+    fprintf(logFile, "\"%lu\",\n", ProcInfo.SID);
+    
+    fprintf(logFile, "\"isElevated\": ");
+    fprintf(logFile, "\"%ld\",\n", ProcInfo.IsElevated);
 
     return;
 }
@@ -51,11 +58,11 @@ void LogProcInfo(PROC_INFO ProcInfo, FILE *logFile){
  *
  * Logs the base information including major function, time, and process information to the log file.
  */
-void LogBaseInfo(INFO Info, FILE *logFile){
-   
-    LogMjFunc(Info.MjFunc, logFile);
+void LogBaseInfo(INFO Info, FILE* logFile) {
 
     LogTime(Info.TimeFields, logFile);
+
+    LogMjFunc(Info.MjFunc, logFile);
 
     LogProcInfo(Info.ProcInfo, logFile);
 }
@@ -67,9 +74,12 @@ void LogBaseInfo(INFO Info, FILE *logFile){
  *
  * Writes file path and file name to the log file.
  */
-void LogFileInfo(PFILE_INFO FileInfo, FILE* logFile){
-    fprintf(logFile,"Path: %ws\n",FileInfo->Path);
-    fprintf(logFile,"File Name; %ws\n",FileInfo->FinalName); 
+void LogFileInfo(PFILE_INFO FileInfo, FILE* logFile) {
+    fprintf(logFile, "\"path\": ");
+    fprintf(logFile, "\"%ws\",\n", FileInfo->Path);
+
+    fprintf(logFile, "\"fileName\": ");
+    fprintf(logFile, "\"%ws\" \n", FileInfo->FinalName);
 
     return;
 }
@@ -82,17 +92,19 @@ void LogFileInfo(PFILE_INFO FileInfo, FILE* logFile){
  *
  * Logs information based on the IOCTL code. Currently, only supports logging file information.
  */
-void LogInfo(INFO Info, FILE *logFile, DWORD IOCTL_CODE){
-    
+void LogInfo(INFO Info, FILE* logFile, DWORD IOCTL_CODE) {
+    fprintf(logFile,"{\n");
     LogBaseInfo(Info, logFile);
 
     switch (IOCTL_CODE) {
-        case IOCTL_FILE_LOG:
-            LogFileInfo(Info.Info.FileInfo, logFile); 
-            break;
-        default:
-            printf("Invalid IOCTL code given\n");
-            break;
+    case IOCTL_FILE_LOG:
+        LogFileInfo(&Info.Info.FileInfo, logFile);
+        break;
+    default:
+        printf("Invalid IOCTL code given\n");
+        break;
     }
-}
+    fprintf(logFile, "}\n");
 
+    fflush(logFile); // Flush the buffer after each write
+}

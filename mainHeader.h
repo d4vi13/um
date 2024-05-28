@@ -1,9 +1,10 @@
+#pragma once
 #include <stdio.h>
 #include <windows.h>
 #include <iostream>
 
-#define CAPTURE_TIME 10000
-#define FS_DRIVER_NAME L"MiniFilter"
+#define CAPTURE_TIME 60000
+#define DRIVER_NAME L"MiniFilter"
 #define UM_MSG "Aloooooooooo\n"
 
 typedef struct ProcInfo PROC_INFO, * PPROC_INFO;
@@ -28,8 +29,10 @@ typedef struct _TIME_FIELDS {
 } TIME_FIELDS;
 typedef TIME_FIELDS* PTIME_FIELDS;
 
-#define IOCTL_FILE_LOG CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA);
-#define IOCTL_PROC_LOG CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA);
+
+
+#define IOCTL_FILE_LOG CTL_CODE(FILE_DEVICE_UNKNOWN, 0x801, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
+#define IOCTL_PROC_LOG CTL_CODE(FILE_DEVICE_UNKNOWN, 0x802, METHOD_BUFFERED, FILE_READ_DATA | FILE_WRITE_DATA)
 
 
 struct ProcInfo {
@@ -49,33 +52,26 @@ struct FileInfo {
     ULONG PathSize;
     ULONG FinalNameSize;
 
-    PWSTR Path;
-    PWSTR FinalName;
+    WCHAR Path[MAX_PATH];
+    WCHAR FinalName[MAX_PATH];
 };
 
 struct MjFunc {
-
     UCHAR Code;
     ULONG Len;
     PWSTR Name;
 };
 
-
-
 struct Info {
-
     MJFUNC      MjFunc;
     TIME_FIELDS TimeFields;
     PROC_INFO   ProcInfo;
-    LIST_ENTRY  ListEntry;
+    union{
+        FILE_INFO   FileInfo;
+    }Info;
+ };
 
-    union {
-        PFILE_INFO FileInfo;
-    } Info;
 
-    POOL_TYPE PoolType;
-
-};
 
 /*
  * LoadDriver - Loads Driver
@@ -89,7 +85,7 @@ struct Info {
  * 	- FALSE failed to load the driver
  */
 
-BOOLEAN LoadDriver(_Out_ SC_HANDLE* hService, _Out_ SC_HANDLE* hSCManager, wchar_t* DriverName);
+BOOLEAN LoadDriver(_Out_ SC_HANDLE* hService, _Out_ SC_HANDLE* hSCManager, _In_ wchar_t* DriverName);
 
 /*
  * UnloadDriver - Unloads Driver
@@ -101,6 +97,7 @@ BOOLEAN LoadDriver(_Out_ SC_HANDLE* hService, _Out_ SC_HANDLE* hSCManager, wchar
  */
 void UnloadDriver(_In_ SC_HANDLE* hService, _In_ SC_HANDLE* hSCManager);
 
-VOID CALLBACK StopCapture();
+void LogInfo(INFO Info, FILE* logFile, DWORD IOCTL_CODE);
 
-void LogInfo(INFO Info, FILE *logFile, DWORD IOCTL_CODE);
+HANDLE GetDriverHandle(wchar_t* DriverName);
+
